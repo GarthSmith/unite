@@ -9,32 +9,6 @@ using Random = UnityEngine.Random;
 [TestFixture]
 public class ConnectedBlockPerformanceTests
 {
-	class FloatReference
-	{
-		public FloatReference(float value)
-		{
-			Value = value;
-		}
-
-		public float Value
-		{
-			get => (float) _boxed;
-			set => _boxed = value;
-		}
-
-		private object _boxed;
-	}
-
-	struct FloatComponent
-	{
-		public float Value;
-	}
-
-	[Test]
-	public void HashSetGroupingTest()
-	{
-	}
-
 	public class BlockManager
 	{
 		public short GetBlockTypeAt(int2 position)
@@ -261,16 +235,16 @@ public class ConnectedBlockPerformanceTests
 		const int totalLoops = 1000;
 		const int arrayLength = 1000000;
 		var originalFloats = new float[arrayLength];
-		var originalReferences = new List<FloatReference>();
+		var originalReferences = new List<ClassThatContainsBoxedFloat>();
 		var componentArray = new FloatComponent[arrayLength];
-		var referenceHashSet = new HashSet<FloatReference>();
+		var referenceHashSet = new HashSet<ClassThatContainsBoxedFloat>();
 
 		for (var index = 0; index < arrayLength; index++)
 		{
 			var value = Random.Range(-100f, 100f);
 			originalFloats[index] = value;
 			componentArray[index].Value = value;
-			var reference = new FloatReference(value);
+			var reference = new ClassThatContainsBoxedFloat(value);
 			originalReferences.Add(reference);
 			referenceHashSet.Add(reference);
 		}
@@ -312,52 +286,6 @@ public class ConnectedBlockPerformanceTests
 	}
 
 	[Test]
-	public void IncrementTest()
-	{
-		// Arrange
-		const int totalLoops = 100;
-		const int arrayLength = 1000000;
-		var originals = new float[arrayLength];
-		var componentArray = new FloatComponent[arrayLength];
-		var referenceHashSet = new HashSet<FloatReference>();
-
-		for (var index = 0; index < arrayLength; index++)
-		{
-			var value = Random.Range(-100f, 100f);
-			originals[index] = value;
-			componentArray[index].Value = value;
-			while (Random.value < 0.5f) new FloatReference(Random.value);
-			referenceHashSet.Add(new FloatReference(value));
-		}
-
-		// Act
-		var structArrayWatch = Stopwatch.StartNew();
-		for (var loopCount = 0; loopCount < totalLoops; loopCount++)
-		{
-			for (var i = 0; i < componentArray.Length; i++)
-				componentArray[i].Value++;
-		}
-
-		structArrayWatch.Stop();
-
-		var referenceHashSetWatch = Stopwatch.StartNew();
-		for (var loopCount = 0; loopCount < totalLoops; loopCount++)
-		{
-			foreach (var floatReference in referenceHashSet)
-				floatReference.Value++;
-		}
-
-		referenceHashSetWatch.Stop();
-
-		// Assert
-		Debug.Log("Array of structs took on average " + (structArrayWatch.ElapsedMilliseconds / (float) totalLoops) +
-		          " milliseconds.");
-		Debug.Log("HashSet of references took on average " +
-		          (referenceHashSetWatch.ElapsedMilliseconds / (float) totalLoops) + " milliseconds.");
-		Assert.True(structArrayWatch.ElapsedMilliseconds < referenceHashSetWatch.ElapsedMilliseconds);
-	}
-
-	[Test]
 	public void ConnectedGroupsAlgorithmWithDictionaries()
 	{
 		// Arrange
@@ -371,16 +299,18 @@ public class ConnectedBlockPerformanceTests
 			var blocksByPosition = GenerateBlocksByPosition();
 			var connectedGroupsOfPositions = new List<List<int2>>();
 			var visited = new HashSet<int2>();
+			var alreadyAssignedGroup = new HashSet<int2>();
 			var frontier = new Stack<int2>();
 			foreach (var position in blocksByPosition.Keys)
 			{
-				if (visited.Contains(position)) continue;
+				if (alreadyAssignedGroup.Contains(position)) continue;
 				var connected = new List<int2>();
 				frontier.Push(position);
 				while (frontier.Count > 0)
 				{
 					var currentPosition = frontier.Pop();
 					connected.Add(currentPosition);
+					alreadyAssignedGroup.Add(position);
 					foreach (var neighbor in GetNeighbors(currentPosition))
 					{
 						if (!visited.Contains(neighbor))
@@ -397,6 +327,7 @@ public class ConnectedBlockPerformanceTests
 				}
 
 				connectedGroupsOfPositions.Add(connected);
+				visited.Clear();
 			}
 
 			connectedGroupCount += connectedGroupsOfPositions.Count;

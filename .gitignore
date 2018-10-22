@@ -1,9 +1,14 @@
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-Assets/AssetStoreTools*
+UniteUnity/[Ll]ibrary/
+UniteUnity/[Tt]emp/
+UniteUnity/[Oo]bj/
+UniteUnity/[Bb]uild/
+UniteUnity/[Bb]uilds/
+UniteUnity/Assets/AssetStoreTools*
+UniteUnity/Logs/
+UniteUnity/.idea/
+UniteUnity/Assets/Plugins/Editor/JetBrains/
+UniteUnity/Assets/Plugins/Editor/JetBrains.meta
+UniteUnity/Assets/Plugins/Editor.meta
 
 # Visual Studio cache directory
 .vs/
